@@ -3,15 +3,13 @@ pragma solidity ^0.8.15;
 
 import "@forge-std/console.sol";
 import {Script} from "@forge-std/Script.sol";
-import {Contract} from "../src/Contract.sol";
+import {Jackpot} from "../src/Jackpot.sol";
 
-contract DeployContract is Script {
-    uint256 public constant NUM = 7;
+// TODO
+contract DeployJackpot is Script {
 
     function run() external {
         vm.startBroadcast();
-        Contract deployedContract = new Contract(NUM);
-        console.log("Contract address: ", address(deployedContract));
         vm.stopBroadcast();
     }
 }
