@@ -11,3 +11,4 @@ out = 'out'
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET_URL}"
+goerli = "${RPC_GOERLI_URL}"
