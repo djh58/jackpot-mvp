@@ -51,7 +51,7 @@ contract MockVRF is VRFCoordinatorV2Interface {
         uint16 minimumRequestConfirmations,
         uint32 callbackGasLimit,
         uint32 numWords
-    ) external returns (uint256 requestId) {
+    ) external pure returns (uint256 requestId) {
         return uint256(1);
     }
 
@@ -65,7 +65,7 @@ contract MockVRF is VRFCoordinatorV2Interface {
      * @dev    amount,
      * @dev    abi.encode(subId));
      */
-    function createSubscription() external returns (uint64 subId) {
+    function createSubscription() external pure returns (uint64 subId) {
         return uint64(0);
     }
 

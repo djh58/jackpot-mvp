@@ -11,12 +11,6 @@ import "@openzeppelin/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/access/AccessControl.sol";
 import "@chainlink/interfaces/VRFCoordinatorV2Interface.sol";
 
-/**
- * TODO:
- * 1) Test the shit out of it
- * 2) Make more efficient
- * 3)
- */
 contract Jackpot is VRFConsumerBaseV2, AccessControl {
     using SafeERC20 for IERC20;
 
@@ -28,16 +22,22 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
     uint64 public subscriptionId;
     uint16 public requestConfirmations;
 
-    bytes32 RAFFLER_ROLE = keccak256("RAFFLER_ROLE");
+    bytes32 public constant RAFFLER_ROLE = keccak256("RAFFLER_ROLE");
+
+    uint256 public raffleCount;
 
     struct RaffleData {
         mapping(address => uint256) userXP;
         address[] users;
         uint256[] prizeAmounts;
-        uint256 upperLimitXP;
+        bool isComplete;
     }
 
-    mapping(uint256 => RaffleData) public raffles;
+    /// @dev map raffleID to RaffleData
+    mapping(uint256 => RaffleData) private raffles;
+
+    /// @dev map vrfRequestId to raffleID
+    mapping(uint256 => uint256) private vrfRequests;
 
     constructor(
         address _usdc,
@@ -80,6 +80,27 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
         requestConfirmations = _requestConfirmations;
     }
 
+    // TODO: complete this function add edit functions to edit everything at once and one thing at a time with right validation (checking id exists, raffle isn't done, etc)
+    function createNewRaffle(
+        address[] memory _users, uint256[] memory _orderedUserXp, uint256[] memory _prizeAmounts
+    ) external
+        onlyRole(RAFFLER_ROLE) {
+            require(
+                _users.length == _orderedUserXp.length,
+                "Jackpot::createNewRaffle: The amount of users and orderedUserXP must be the same"
+            );
+            uint256 raffleId = raffleCount;
+            raffleCount++;
+            RaffleData storage raffle = raffles[raffleId];
+            raffle.users = _users;
+            raffle.prizeAmounts = _prizeAmounts;
+            for (uint256 i = 0; i < _users.length; i++) {
+                raffle.userXP[_users[i]] = _orderedUserXp[i];
+            }
+        }
+
+
+
     function setupRaffle(address[] memory _users, uint256[] memory _orderedUserXp, uint256[] memory _prizeAmounts)
         external
         onlyRole(RAFFLER_ROLE)
@@ -91,15 +112,13 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
         raffles[requestId].users = _users;
         for (uint256 i = 0; i < _users.length; i++) {
             raffles[requestId].userXP[_users[i]] = _orderedUserXp[i];
-            if (i == _users.length - 1) {
-                raffles[requestId].upperLimitXP = _orderedUserXp[i];
-            }
         }
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal virtual override {
         for (uint256 i = 0; i < randomWords.length; i++) {
-            uint256 randomNum = (randomWords[i] % raffles[requestId].upperLimitXP) + 1;
+            // TODO: fix
+            uint256 randomNum = (randomWords[i] % getRaffleUpperLimitXP(requestId)) + 1;
             uint256 prizeAmount = raffles[requestId].prizeAmounts[i];
             uint256 userXp;
             uint256 j;
@@ -125,7 +144,9 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
         return raffles[_requestId].prizeAmounts;
     }
 
-    function getRaffleUpperLimitXP(uint256 _requestId) external view returns (uint256) {
-        return raffles[_requestId].upperLimitXP;
+    function getRaffleUpperLimitXP(uint256 _requestId) public view returns (uint256) {
+        RaffleData storage raffle = raffles[_requestId];
+        address lastUser = raffle.users[raffle.users.length - 1];
+        return raffle.userXP[lastUser];
     }
 }
