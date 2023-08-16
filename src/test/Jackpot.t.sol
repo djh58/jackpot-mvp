@@ -18,10 +18,10 @@ contract JackpotTest is Test {
     uint256 mainnetFork;
 
     function setUp() public {
-        mainnetFork = vm.createSelectFork(vm.rpcUrl("mainnet"));
+        string memory MAINNET_RPC_URL = vm.envString("RPC_MAINNET_URL");
+        mainnetFork = vm.createSelectFork(MAINNET_RPC_URL);
         vrf = new MockVRF();
         jackpot = new Jackpot(
-            MainnetDeployConfig.USDC,
             MainnetDeployConfig.KEY_HASH,
             MainnetDeployConfig.CALLBACK_GAS_LIMIT,
             MainnetDeployConfig.SUBSCRIPTION_ID,
@@ -30,16 +30,6 @@ contract JackpotTest is Test {
             address(vrf)
         );
     }
-
-    /**
-     * TODO:
-     * -set keyhash
-     * -set subId
-     * -set callback gas limit
-     * -set request confirmations
-     * -setup raffle
-     * -conduct raffle (mocked out via raw external fulfill call)
-     */
 
     function testSetKeyHash() public {
         // this contract is the deployer so it is the admin and is able to call the setters
@@ -73,51 +63,53 @@ contract JackpotTest is Test {
         assertEq(jackpot.requestConfirmations(), newRequestConfirmations);
     }
 
-    function testSetupRaffle() public {
-        _doRaffleSetup();
+    /// write unit tests for createNewRaffle, updateRaffleIpfsHash, and drawRaffle
+
+    function testCreateNewRaffle() public {
+        // this contract is the deployer so it is the admin and is able to call the sette
         vm.selectFork(mainnetFork);
-        address[] memory users = jackpot.getRaffleUsers(1);
-        assertEq(users[0], 0xBEeFbeefbEefbeEFbeEfbEEfBEeFbeEfBeEfBeef);
-        assertEq(jackpot.getRafflePrizeAmounts(1)[0], 1000e6);
-        assertEq(jackpot.getRaffleUpperLimitXP(1), 150);
-        assertEq(jackpot.getRaffleUserXp(1, 0xbABEBABEBabeBAbEBaBeBabeBABEBabEBAbeBAbe), 150);
+        string memory ipfsHash = "foo";
+        jackpot.createNewRaffle(ipfsHash);
+        uint256 raffle_num = jackpot.getRaffleCount() - 1;
+        string memory hash_saved = jackpot.getIpfsHashFromRaffleId(raffle_num);
+        assertEq(hash_saved, ipfsHash);
     }
 
-    function testRaffle() public {
-        address winner = 0xbABEBABEBabeBAbEBaBeBabeBABEBabEBAbeBAbe;
-        uint256 initialBal = IERC20(jackpot.USDC()).balanceOf(winner);
-        _doRaffleSetup();
+    function testUpdateRaffleIpfsHash() public {
+        // this contract is the deployer so it is the admin and is able to call the sette
         vm.selectFork(mainnetFork);
+
+        string memory ipfsHash = "foo";
+        jackpot.createNewRaffle(ipfsHash);
+        uint256 raffle_num = jackpot.getRaffleCount() - 1;
+
+        string memory newIpfsHash = "fee";
+        jackpot.updateRaffleIpfsHash(newIpfsHash, raffle_num);
+
+        string memory hash_saved = jackpot.getIpfsHashFromRaffleId(raffle_num);
+        assertEq(hash_saved, newIpfsHash);
+    }
+
+    function testdrawRaffle() public {
+        // this contract is the deployer so it is the admin and is able to call the sette
+        vm.selectFork(mainnetFork);
+
+        string memory ipfsHash = "foo";
+        jackpot.createNewRaffle(ipfsHash);
+        uint256 raffle_num = jackpot.getRaffleCount() - 1;
+        jackpot.drawRaffle(raffle_num);
         vm.startPrank(address(vrf));
+        uint256 randomNumExpected = 104;
+        uint256 reqIdExpected = 1;
         uint256[] memory randomWordList = new uint256[](1);
-        randomWordList[0] = 104;
-        jackpot.rawFulfillRandomWords(1, randomWordList);
+        randomWordList[0] = randomNumExpected;
+        jackpot.rawFulfillRandomWords(reqIdExpected, randomWordList);
         vm.stopPrank();
-        uint256 finalBal = IERC20(jackpot.USDC()).balanceOf(winner);
-        uint256 delta = finalBal - initialBal;
-        assertEq(delta, 1000e6);
-    }
 
-    function _doRaffleSetup() internal {
-        // this contract is the deployer so it is the admin and is able to call the setters
-        vm.selectFork(mainnetFork);
-        uint256 raffleId = 1;
-        address[] memory participants = new address[](2);
-        participants[0] = 0xBEeFbeefbEefbeEFbeEfbEEfBEeFbeEfBeEfBeef;
-        participants[1] = 0xbABEBABEBabeBAbEBaBeBabeBABEBabEBAbeBAbe;
-
-        uint256[] memory xpAmounts = new uint256[](2);
-        // first user has 50 xp
-        xpAmounts[0] = 50;
-        // second user has 100 xp
-        xpAmounts[1] = 150;
-
-        uint256[] memory usdcAmounts = new uint256[](1);
-        // usdc amount is 1000
-        usdcAmounts[0] = 1000e6;
-
-        deal(jackpot.USDC(), address(jackpot), 1000e6);
-
-        jackpot.setupRaffle(participants, xpAmounts, usdcAmounts);
+        uint256 randomNum = jackpot.getRandomNumberDrawnFromRaffleId(raffle_num);
+        (raffle_num);
+        uint256 reqId = jackpot.getVrfRequestIdFromRaffleId(raffle_num);
+        assertEq(randomNum, randomNumExpected);
+        assertEq(reqId, reqIdExpected);
     }
 }

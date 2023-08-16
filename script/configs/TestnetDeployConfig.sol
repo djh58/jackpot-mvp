@@ -2,8 +2,6 @@
 pragma solidity ^0.8.15;
 
 library TestnetDeployConfig {
-    // mock token I deployed that we can mint from as needed
-    address constant USDC = 0xC447865EDe70cE0Ca956f77048038650410F0b25;
     // 150 gwei
     bytes32 constant KEY_HASH = 0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15;
     uint32 constant CALLBACK_GAS_LIMIT = 2_500_000;
