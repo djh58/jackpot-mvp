@@ -6,7 +6,6 @@ import {Script} from "@forge-std/Script.sol";
 import {Jackpot} from "../src/Jackpot.sol";
 import {MainnetDeployConfig} from "./configs/MainnetDeployConfig.sol";
 import {TestnetDeployConfig} from "./configs/TestnetDeployConfig.sol";
-// TODO
 
 contract DeployJackpot is Script {
     Jackpot jackpot;
@@ -16,7 +15,6 @@ contract DeployJackpot is Script {
         vm.startBroadcast();
         if (chainId == 1) {
             jackpot = new Jackpot(
-                MainnetDeployConfig.USDC,
                 MainnetDeployConfig.KEY_HASH,
                 MainnetDeployConfig.CALLBACK_GAS_LIMIT,
                 MainnetDeployConfig.SUBSCRIPTION_ID,
@@ -25,7 +23,6 @@ contract DeployJackpot is Script {
             );
         } else if (chainId == 5) {
             jackpot = new Jackpot(
-                TestnetDeployConfig.USDC,
                 TestnetDeployConfig.KEY_HASH,
                 TestnetDeployConfig.CALLBACK_GAS_LIMIT,
                 TestnetDeployConfig.SUBSCRIPTION_ID,
