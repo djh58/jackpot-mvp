@@ -18,6 +18,9 @@ contract CreateNewDrawing is Script {
         }
         jackpot = Jackpot(LatestDeployedContract.DEPLOYED_CONTRACT);
         jackpot.createNewDrawing(ipfsHash);
+        uint256 count = jackpot.getDrawingCount();
+        uint256 newDrawingId = count - 1;
+        console.log("New drawing id: %d", newDrawingId);
         vm.stopBroadcast();
     }
 }

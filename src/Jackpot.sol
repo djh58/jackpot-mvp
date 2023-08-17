@@ -103,7 +103,9 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
         uint256 requestId = VRF_COODINATOR.requestRandomWords(
             keyHash, subscriptionId, requestConfirmations, callbackGasLimit, uint32(1)
         );
+        DrawingData storage drawing = drawings[drawingId];
         drawings[drawingId].vrfRequestId = requestId;
+        vrfRequests[requestId] = drawingId;
     }
 
     /// @dev this is the callback function that is called by Chainlink VRF when the random number is drawn
