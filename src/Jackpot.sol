@@ -104,7 +104,7 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
             keyHash, subscriptionId, requestConfirmations, callbackGasLimit, uint32(1)
         );
         DrawingData storage drawing = drawings[drawingId];
-        drawings[drawingId].vrfRequestId = requestId;
+        drawing.vrfRequestId = requestId;
         vrfRequests[requestId] = drawingId;
     }
 
