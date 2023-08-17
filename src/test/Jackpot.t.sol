@@ -63,41 +63,41 @@ contract JackpotTest is Test {
         assertEq(jackpot.requestConfirmations(), newRequestConfirmations);
     }
 
-    /// write unit tests for createNewRaffle, updateRaffleIpfsHash, and drawRaffle
+    /// write unit tests for createNewDrawing, updateDrawingIpfsHash, and drawNumber
 
-    function testCreateNewRaffle() public {
+    function testCreateNewDrawing() public {
         // this contract is the deployer so it is the admin and is able to call the sette
         vm.selectFork(mainnetFork);
         string memory ipfsHash = "foo";
-        jackpot.createNewRaffle(ipfsHash);
-        uint256 raffle_num = jackpot.getRaffleCount() - 1;
-        string memory hash_saved = jackpot.getIpfsHashFromRaffleId(raffle_num);
+        jackpot.createNewDrawing(ipfsHash);
+        uint256 drawing_num = jackpot.getDrawingCount() - 1;
+        string memory hash_saved = jackpot.getIpfsHashFromDrawingId(drawing_num);
         assertEq(hash_saved, ipfsHash);
     }
 
-    function testUpdateRaffleIpfsHash() public {
+    function testUpdateDrawingIpfsHash() public {
         // this contract is the deployer so it is the admin and is able to call the sette
         vm.selectFork(mainnetFork);
 
         string memory ipfsHash = "foo";
-        jackpot.createNewRaffle(ipfsHash);
-        uint256 raffle_num = jackpot.getRaffleCount() - 1;
+        jackpot.createNewDrawing(ipfsHash);
+        uint256 drawing_num = jackpot.getDrawingCount() - 1;
 
         string memory newIpfsHash = "fee";
-        jackpot.updateRaffleIpfsHash(newIpfsHash, raffle_num);
+        jackpot.updateDrawingIpfsHash(newIpfsHash, drawing_num);
 
-        string memory hash_saved = jackpot.getIpfsHashFromRaffleId(raffle_num);
+        string memory hash_saved = jackpot.getIpfsHashFromDrawingId(drawing_num);
         assertEq(hash_saved, newIpfsHash);
     }
 
-    function testdrawRaffle() public {
+    function testdrawNumber() public {
         // this contract is the deployer so it is the admin and is able to call the sette
         vm.selectFork(mainnetFork);
 
         string memory ipfsHash = "foo";
-        jackpot.createNewRaffle(ipfsHash);
-        uint256 raffle_num = jackpot.getRaffleCount() - 1;
-        jackpot.drawRaffle(raffle_num);
+        jackpot.createNewDrawing(ipfsHash);
+        uint256 drawing_num = jackpot.getDrawingCount() - 1;
+        jackpot.drawNumber(drawing_num);
         vm.startPrank(address(vrf));
         uint256 randomNumExpected = 104;
         uint256 reqIdExpected = 1;
@@ -106,9 +106,9 @@ contract JackpotTest is Test {
         jackpot.rawFulfillRandomWords(reqIdExpected, randomWordList);
         vm.stopPrank();
 
-        uint256 randomNum = jackpot.getRandomNumberDrawnFromRaffleId(raffle_num);
-        (raffle_num);
-        uint256 reqId = jackpot.getVrfRequestIdFromRaffleId(raffle_num);
+        uint256 randomNum = jackpot.getRandomNumberDrawnFromDrawingId(drawing_num);
+        (drawing_num);
+        uint256 reqId = jackpot.getVrfRequestIdFromDrawingId(drawing_num);
         assertEq(randomNum, randomNumExpected);
         assertEq(reqId, reqIdExpected);
     }

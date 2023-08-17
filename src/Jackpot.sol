@@ -20,25 +20,25 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
     uint16 public requestConfirmations;
 
     /**
-     * @dev this role can setup raffles and draw numbers for them
+     * @dev this role can setup drawings and draw numbers for them
      * @notice defaults to msg.sender, who can delegate others or revoke the role
      */
     bytes32 public constant RAFFLER_ROLE = keccak256("RAFFLER_ROLE");
 
-    /// @dev this is the total number of raffles (zero-indexed), also acts as a uid for each
-    uint256 public raffleCount;
+    /// @dev this is the total number of drawings (zero-indexed), also acts as a uid for each
+    uint256 public drawingCount;
 
     /// @dev ipfsHash contains all the details on participants, who are selected off-chain via randomNumberRaw
-    struct RaffleData {
+    struct DrawingData {
         string ipfsHash;
         uint256 vrfRequestId;
         uint256 randomNumberRaw;
     }
 
-    /// @dev map uint256 raffleID to RaffleData
-    mapping(uint256 => RaffleData) private raffles;
+    /// @dev map uint256 drawingID to DrawingData
+    mapping(uint256 => DrawingData) private drawings;
 
-    /// @dev map uint256 vrfRequestId to uint256 raffleID. this allows us to quickly update the raffleData
+    /// @dev map uint256 vrfRequestId to uint256 drawingID. this allows us to quickly update the drawingData
     mapping(uint256 => uint256) private vrfRequests;
 
     /// @dev deployer needs to input Chainlink configs, accessible via VRF GUI and docs
@@ -78,68 +78,68 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
         requestConfirmations = _requestConfirmations;
     }
 
-    /// @dev this initializes the raffle, saying "hey, this is what the random number is gonna be used to select"
-    function createNewRaffle(string calldata ipfsHash) external onlyRole(RAFFLER_ROLE) {
-        uint256 raffleId = raffleCount;
-        raffleCount++;
-        RaffleData storage raffle = raffles[raffleId];
-        raffle.ipfsHash = ipfsHash;
+    /// @dev this initializes the drawing, saying "hey, this is what the random number is gonna be used to select"
+    function createNewDrawing(string calldata ipfsHash) external onlyRole(RAFFLER_ROLE) {
+        uint256 drawingId = drawingCount;
+        drawingCount++;
+        DrawingData storage drawing = drawings[drawingId];
+        drawing.ipfsHash = ipfsHash;
     }
 
-    /// @dev updates raffle info in the event it is delayed and a new snapshot is made. cannot be updated after drawing, for fairness!
-    function updateRaffleIpfsHash(string calldata ipfsHash, uint256 raffleId) external onlyRole(RAFFLER_ROLE) {
-        RaffleData storage raffle = raffles[raffleId];
-        if (raffle.vrfRequestId != 0 || raffle.randomNumberRaw != 0) {
-            revert("Jackpot::setupRaffle: Raffle already drawn");
+    /// @dev updates drawing info in the event it is delayed and a new snapshot is made. cannot be updated after drawing, for fairness!
+    function updateDrawingIpfsHash(string calldata ipfsHash, uint256 drawingId) external onlyRole(RAFFLER_ROLE) {
+        DrawingData storage drawing = drawings[drawingId];
+        if (drawing.vrfRequestId != 0 || drawing.randomNumberRaw != 0) {
+            revert("Jackpot::setupDrawing: Drawing already drawn");
         }
-        raffle.ipfsHash = ipfsHash;
+        drawing.ipfsHash = ipfsHash;
     }
 
     /// @dev selects number which is saved by internal function, used to determine winner off-chain
-    function drawRaffle(uint256 raffleId) external onlyRole(RAFFLER_ROLE) {
-        if (bytes(raffles[raffleId].ipfsHash).length == 0 || raffles[raffleId].vrfRequestId != 0) {
-            revert("Jackpot::setupRaffle: Raffle either not set up or already drawn");
+    function drawNumber(uint256 drawingId) external onlyRole(RAFFLER_ROLE) {
+        if (bytes(drawings[drawingId].ipfsHash).length == 0 || drawings[drawingId].vrfRequestId != 0) {
+            revert("Jackpot::setupDrawing: Drawing either not set up or already drawn");
         }
         uint256 requestId = VRF_COODINATOR.requestRandomWords(
             keyHash, subscriptionId, requestConfirmations, callbackGasLimit, uint32(1)
         );
-        raffles[raffleId].vrfRequestId = requestId;
+        drawings[drawingId].vrfRequestId = requestId;
     }
 
     /// @dev this is the callback function that is called by Chainlink VRF when the random number is drawn
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal virtual override {
         for (uint256 i = 0; i < randomWords.length; i++) {
-            uint256 raffleId = vrfRequests[requestId];
-            RaffleData storage raffle = raffles[raffleId];
-            raffle.randomNumberRaw = randomWords[i];
+            uint256 drawingId = vrfRequests[requestId];
+            DrawingData storage drawing = drawings[drawingId];
+            drawing.randomNumberRaw = randomWords[i];
             if (i > 0) {
                 revert("Jackpot::fulfillRandomWords: More than one random word returned");
             }
         }
     }
 
-    /// @dev given a VRF request Id, returns the raffle Id. if zero then not affiliated with a raffle
-    function getRaffleIdFromVrfRequestId(uint256 _requestId) external view returns (uint256) {
+    /// @dev given a VRF request Id, returns the drawing Id. if zero then not affiliated with a drawing
+    function getDrawingIdFromVrfRequestId(uint256 _requestId) external view returns (uint256) {
         return vrfRequests[_requestId];
     }
 
-    /// @dev given a raffle Id, returns the VRF request Id. if zero then not drawn
-    function getVrfRequestIdFromRaffleId(uint256 _raffleId) external view returns (uint256) {
-        return raffles[_raffleId].vrfRequestId;
+    /// @dev given a drawing Id, returns the VRF request Id. if zero then not drawn
+    function getVrfRequestIdFromDrawingId(uint256 _drawingId) external view returns (uint256) {
+        return drawings[_drawingId].vrfRequestId;
     }
 
-    /// @dev given a raffle Id, returns the raw random number. if zero then not drawn
-    function getRandomNumberDrawnFromRaffleId(uint256 _raffleId) external view returns (uint256) {
-        return raffles[_raffleId].randomNumberRaw;
+    /// @dev given a drawing Id, returns the raw random number. if zero then not drawn
+    function getRandomNumberDrawnFromDrawingId(uint256 _drawingId) external view returns (uint256) {
+        return drawings[_drawingId].randomNumberRaw;
     }
 
-    /// @dev given a raffle Id, returns the ipfs hash. if empty string than not initalized
-    function getIpfsHashFromRaffleId(uint256 _raffleId) external view returns (string memory) {
-        return raffles[_raffleId].ipfsHash;
+    /// @dev given a drawing Id, returns the ipfs hash. if empty string than not initalized
+    function getIpfsHashFromDrawingId(uint256 _drawingId) external view returns (string memory) {
+        return drawings[_drawingId].ipfsHash;
     }
 
-    /// @dev get zero-indexed total of raffles
-    function getRaffleCount() external view returns (uint256) {
-        return raffleCount;
+    /// @dev get zero-indexed total of drawings
+    function getDrawingCount() external view returns (uint256) {
+        return drawingCount;
     }
 }
