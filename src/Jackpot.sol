@@ -108,14 +108,9 @@ contract Jackpot is VRFConsumerBaseV2, AccessControl {
 
     /// @dev this is the callback function that is called by Chainlink VRF when the random number is drawn
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal virtual override {
-        for (uint256 i = 0; i < randomWords.length; i++) {
-            uint256 drawingId = vrfRequests[requestId];
-            DrawingData storage drawing = drawings[drawingId];
-            drawing.randomNumberRaw = randomWords[i];
-            if (i > 0) {
-                revert("Jackpot::fulfillRandomWords: More than one random word returned");
-            }
-        }
+        uint256 drawingId = vrfRequests[requestId];
+        DrawingData storage drawing = drawings[drawingId];
+        drawing.randomNumberRaw = randomWords[0];
     }
 
     /// @dev given a VRF request Id, returns the drawing Id. if zero then not affiliated with a drawing

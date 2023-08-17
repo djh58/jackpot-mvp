@@ -101,7 +101,7 @@ contract JackpotTest is Test {
         vm.startPrank(address(vrf));
         uint256 randomNumExpected = 104;
         uint256 reqIdExpected = 1;
-        uint256[] memory randomWordList = new uint256[](1);
+        uint256[] memory randomWordList = new uint256[](2);
         randomWordList[0] = randomNumExpected;
         jackpot.rawFulfillRandomWords(reqIdExpected, randomWordList);
         vm.stopPrank();
