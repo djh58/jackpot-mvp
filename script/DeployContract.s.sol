@@ -7,7 +7,7 @@ import {Jackpot} from "../src/Jackpot.sol";
 import {MainnetDeployConfig} from "./configs/MainnetDeployConfig.sol";
 import {TestnetDeployConfig} from "./configs/TestnetDeployConfig.sol";
 
-contract DeployJackpot is Script {
+contract DeployContract is Script {
     Jackpot jackpot;
 
     function run() external {

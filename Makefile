@@ -16,6 +16,10 @@ report   :; forge clean && forge test --gas-report | sed -e/╭/\{ -e:1 -en\;b1 
 deploy-contract :; forge script script/DeployContract.s.sol:DeployContract --rpc-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY} --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
 verify-contract :; forge script script/DeployContract.s.sol:DeployContract --rpc-url ${RPC_MAINNET_URL} --verify --etherscan-api-key ${ETHERSCAN_API_KEY} -vvvv
 
+# Drawing commands
+create-drawing :; forge script script/CreateNewDrawing.s.sol:CreateNewDrawing --rpc-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY}
+draw-number :; forge script script/DrawNumber.s.sol:DrawNumber --rpc-url ${RPC_MAINNET_URL} --broadcast --private-key ${PRIVATE_KEY}
+
 # Clean & lint
 clean    :; forge clean
 lint     :; npx prettier --write src/**/*.sol
