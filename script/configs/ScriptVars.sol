@@ -2,7 +2,7 @@
 pragma solidity ^0.8.15;
 
 library ScriptVars {
-    address constant DEPLOYED_CONTRACT = 0x6f10040d6A4f2Ab8d9FDf641797a78dE08DDCe81;
-    string constant IPFS_HASH = "bafybeibhcledy7tdpcogjb56zzl5ajjacszphf26xtwghhece6in3ez2va";
-    uint256 constant DRAWING_ID = 1;
+    address constant DEPLOYED_CONTRACT = 0x80Ea60adB7b30e9eEEA5c16799c144F17eA31511;
+    string constant IPFS_HASH = "bafybeig4dn3mzgppzxwdgxoh45cdq6ay5pcvfulcwbqf57aojhedz3wgim";
+    uint256 constant DRAWING_ID = 24;
 }
